@@ -6,14 +6,12 @@ import unittest
 
 def weather_run():
     return __name__
-api_result = requests.get('http://api.weatherstack.com/current', config.params)
 #write into json file
 def my_json_file():
+    api_result = requests.get('http://api.weatherstack.com/current', config.params)
     api_response = api_result.json()
-    data = json.dumps(api_response)
-    return(data)
-    response_dict = json.loads(my_json_file())
-print(my_json_file())
+    return(json.dumps(api_response))
+#print(my_json_file())
 
 response_dict = json.loads(my_json_file())
 #enter data to db
@@ -21,6 +19,8 @@ def dynamic_data_entry():
     conn = sqlite3.connect('test.db')
     c = conn.cursor()
     c.execute("CREATE TABLE IF NOT EXISTS stack_weather (city varchar(30), country varchar(30),region varchar(30), temp integer)")
+    c.execute("DELETE from stack_weather")
+    conn.commit()
     c.execute("insert into stack_weather values (?,?,?,?)",
           [response_dict["location"]['name'],
            response_dict["location"]['country'],
@@ -33,13 +33,16 @@ def get_data_sql():
     conn = sqlite3.connect('test.db')
     c = conn.cursor()
     c.execute("select * from stack_weather")
-    return (c.fetchall())
+    rows = c.fetchall()
+    for row in rows:
+         print(row)
     conn.close()
-print(get_data_sql())
+#print(get_data_sql())
 
 class TestSum(unittest.TestCase):
-    def test_api():
+    def test_api(self):
     #test succuessful api response
+        api_result = requests.get('http://api.weatherstack.com/current', config.params)
         if api_result.status_code == 200:
             api_response = api_result.json()
     # test when city not exists
@@ -47,12 +50,8 @@ class TestSum(unittest.TestCase):
             print("city not found")
         return
     #check db entered value
-    def test_data_entry():
-        unittest.get_data_sql()>1 #pass
-        return
-    #check correction of the db
-    def data_correct():
-        unittest.get_data_sql()==1
+    def test_data_entry(self):
+        unittest.result >1 #pass
         return
 
 #main function to execute all
